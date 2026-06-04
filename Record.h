@@ -19,7 +19,8 @@ class Phone {
         std::string getShort() const { return short_form; }
 
         void print() const {
-            std::cout << full_form
+            std::cout << category << ": "
+                      << full_form
                       << " (" << medium_form << ", "
                       << short_form << ")";
         }
