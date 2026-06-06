@@ -276,6 +276,10 @@ int main(){
                 std::cout << "Оберіть номер запису (0 — скасувати):";
                 int remove;
                 std::cin >> remove;
+                if (remove > book.getRecords().size() || remove < 0) {
+                    std::cout << "Невірний номер запису.\n";
+                    break;
+                }
                 if (remove == 0) {
                     std::cout << "Скасовано.\n";
                 } else {
