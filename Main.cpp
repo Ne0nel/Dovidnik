@@ -249,6 +249,7 @@ void editPhones(Record* record) {
                         std::cout << "Скасовано.\n";
                         break;
                     }
+                    if(line.substr(0, 1) == "0" && line.length() == 10) line = "+38" + line;
                     if (line.substr(0, 3) != "+38" || line.length() != 13) {
                         std::cout << "Невірний формат номера. Спробуйте ще раз.\n";
                         continue;
@@ -293,6 +294,7 @@ void editEmails(Record* record) {
             std::string e;
             std::cout << "Введіть email: ";
             std::getline(std::cin, e);
+            
             if (!e.empty()) {
                 record->getEmails().push_back(e);
                 std::cout << "Email додано.\n";
