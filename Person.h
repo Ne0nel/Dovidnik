@@ -17,5 +17,7 @@ class Person : public Record {
         std::string getName() const;
         Organization* getOrganization() const;
         void setOrganization(Organization* org);
+        void setName(const std::string& newName);
+        void setGender(const std::string& newGender);
 };
 

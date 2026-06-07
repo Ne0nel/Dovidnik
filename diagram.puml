@@ -1,0 +1,65 @@
+@startuml
+class Phone {
+    - std::string category
+    - std::string full_form
+    - std::string medium_form
+    - std::string short_form
+    + Phone(std::string category, std::string full, std::string med, std::string sh)
+    + std::string getCategory() const
+    + std::string getFull() const
+    + std::string getMedium() const
+    + std::string getShort() const
+    + void print() const
+}
+
+abstract class Record {
+    - std::vector<Phone> phones
+    - std::vector<std::string> emails
+    + Record(std::vector<Phone> phones, std::vector<std::string> emails)
+    + virtual ~Record()
+    + virtual void print() const
+    + const std::vector<Phone>& getPhones() const
+    + const std::vector<std::string>& getEmails() const
+}
+
+class Person {
+    - std::string name
+    - std::string gender
+    - Organization* organization
+    + Person(std::string name, std::string gender, Organization* org, std::vector<Phone> phs, std::vector<std::string> ems)
+    + void print() const
+    + std::string getName() const
+    + Organization* getOrganization() const
+    + void setOrganization(Organization* org)
+}
+
+class Organization {
+    - std::string title
+    - std::string activity
+    - Person* manager
+    + Organization(std::string title, std::string activity, Person* manager, std::vector<Phone> phones, std::vector<std::string> emails)
+    + void print() const
+    + std::string getTitle() const
+    + Person* getManager() const
+    + void setManager(Person* mngr)
+}
+
+class PhoneBook {
+    - std::vector<Record*> records
+    + ~PhoneBook()
+    + void addRecord(Record* record)
+    + void removeRecord(int index)
+    + const std::vector<Record*>& getRecords() const
+    + std::vector<Record*> findByName(const std::string& name) const
+    + std::vector<Record*> findByPhone(const std::string& phoneNumber) const
+    + std::vector<Record*> findByEmail(const std::string& searchEmail) const
+}
+
+Record <|-- Person
+Record <|-- Organization
+
+PhoneBook "1" o-- "*" Record : records
+Record "1" o-- "*" Phone : phones
+Person "0..1" --> "0..1" Organization : organization
+Organization "0..1" --> "0..1" Person : manager
+@enduml

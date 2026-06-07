@@ -8,6 +8,8 @@ Organization::Organization(std::string title, std::string activity, Person* mana
 std::string Organization::getTitle() const  {return title; }
 Person* Organization::getManager() const    {return manager;}
 void Organization::setManager(Person* mngr) {manager = mngr;}
+void Organization::setTitle(const std::string& newTitle) { title = newTitle; }
+void Organization::setActivity(const std::string& newActivity) { activity = newActivity; }
 
 void Organization::print() const {
     std::cout << "Назва: "      << title    << "\n" 

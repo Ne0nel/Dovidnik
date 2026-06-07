@@ -16,5 +16,7 @@ class Organization : public Record{
         std::string getTitle() const; 
         Person* getManager() const;
         void setManager(Person* mngr);
+        void setTitle(const std::string& newTitle);
+        void setActivity(const std::string& newActivity);
 };
 

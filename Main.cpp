@@ -31,7 +31,7 @@ Phone generateRandomPhone() {
 
     std::string full = "+38" + code + number;
     std::string medium = code + number.substr(0, 7);
-    std::string shortt = number.substr(0,3) + "-" + number.substr(3);
+    std::string shortt = number.substr(0, 7);
 
     return Phone(cat, full, medium, shortt);
 }
@@ -121,7 +121,8 @@ std::vector<Phone> enterPhones() {
         std::string line;
         std::getline(std::cin, line);
         if (line.empty()) break;
-        if(line.substr(0, 3) != "+38" && line.size() != 13) {
+        if(line.substr(0, 1) == "0" && line.length() == 10) line = "+38" + line; 
+        if(line.substr(0, 3) != "+38" || line.length() != 13) {
             std::cout << "Невірний формат номера. Спробуйте ще раз.\n";
             continue;
         }
@@ -141,9 +142,355 @@ std::vector<std::string> enterEmails() {
         std::string e;
         std::getline(std::cin, e);
         if (e.empty()) break;
+
+        if (e.find(' ') != std::string::npos) {
+            std::cout << "Невірний формат email. Спробуйте ще раз.\n";
+            continue;
+        }
+
+        size_t firstAt = e.find('@');
+        size_t lastAt = e.rfind('@');
+        if (firstAt == std::string::npos || firstAt != lastAt || firstAt == 0 || firstAt == e.length() - 1) {
+            std::cout << "Невірний формат email. Спробуйте ще раз.\n";
+            continue;
+        }
+
+        size_t dot = e.find('.', firstAt + 2); 
+        if (dot == std::string::npos || dot == e.length() - 1) {
+            std::cout << "Невірний формат email. Спробуйте ще раз.\n";
+            continue;
+        }
         res.push_back(e);
     }
     return res;
+}
+
+
+Person* findPerson(PhoneBook& book, const std::string& name) {
+    for (auto* record : book.getRecords()) {
+        if (auto* person = dynamic_cast<Person*>(record)) {
+            if (person->getName() == name) return person;
+        }
+    }
+    return nullptr;
+}
+
+Organization* findOrganization(PhoneBook& book, const std::string& title) {
+    for (auto* record : book.getRecords()) {
+        if (auto* org = dynamic_cast<Organization*>(record)) {
+            if (org->getTitle() == title) return org;
+        }
+    }
+    return nullptr;
+}
+
+void editPhones(Record* record) {
+    while (true) {
+        const auto& phones = record->getPhones();
+        std::cout << "Телефони:\n";
+        for (int i = 0; i < phones.size(); i++){
+            std::cout << i + 1 << ". ";
+            phones[i].print();
+            std::cout << "\n";
+        }
+        std::cout << "1. Додати номер\n"
+                  << "2. Видалити номер\n"
+                  << "3. Замінити номер\n"
+                  << "0. Назад\n"
+                  << ">>> ";
+        int opt;
+        if (!(std::cin >> opt)) {
+            std::cin.clear();
+            std::cin.ignore(10000, '\n');
+            continue;
+        }
+        std::cin.ignore();
+        if (opt == 0) break;
+        if (opt == 1) {
+            auto newPhones = enterPhones();
+            if (!newPhones.empty()) {
+                auto& phoneList = record->getPhones();
+                phoneList.insert(phoneList.end(), newPhones.begin(), newPhones.end());
+                std::cout << "Номер додано.\n";
+            } else {
+                std::cout << "Нічого не додано.\n";
+            }
+        } else if (opt == 2) {
+            if (phones.empty()) {
+                std::cout << "Немає номерів для видалення.\n";
+                continue;
+            }
+            std::cout << "Введіть номер телефону для видалення: ";
+            int idx;
+            std::cin >> idx;
+            std::cin.ignore();
+            if (idx > 0 && idx <= phones.size()) {
+                record->getPhones().erase(record->getPhones().begin() + idx - 1);
+                std::cout << "Номер видалено.\n";
+            } else {
+                std::cout << "Невірний індекс.\n";
+            }
+        } else if (opt == 3) {
+            if (phones.empty()) {
+                std::cout << "Немає номерів для заміни.\n";
+                continue;
+            }
+            std::cout << "Введіть номер телефону для заміни: ";
+            int idx;
+            std::cin >> idx;
+            std::cin.ignore();
+            if (idx > 0 && idx <= phones.size()) {
+                std::string cat = choosePhoneCategory();
+                std::string line;
+                while (true) {
+                    std::cout << "Введіть номер телефону (формат +380XXYYYYYYY): ";
+                    std::getline(std::cin, line);
+                    if (line.empty()) {
+                        std::cout << "Скасовано.\n";
+                        break;
+                    }
+                    if (line.substr(0, 3) != "+38" || line.length() != 13) {
+                        std::cout << "Невірний формат номера. Спробуйте ще раз.\n";
+                        continue;
+                    }
+                    std::string digits = line.substr(1);
+                    std::string medium = digits.substr(0, 9);
+                    std::string shortf = digits.substr(digits.size() - 7);
+                    record->getPhones()[idx - 1] = Phone(cat, line, medium, shortf);
+                    std::cout << "Номер замінено.\n";
+                    break;
+                }
+            } else {
+                std::cout << "Невірний індекс.\n";
+            }
+        } else {
+            std::cout << "Невірний вибір.\n";
+        }
+    }
+}
+
+void editEmails(Record* record) {
+    while (true) {
+        const auto& emails = record->getEmails();
+        std::cout << "Email:\n";
+        for (int i = 0; i < emails.size(); ++i) {
+            std::cout << i + 1 << ". " << emails[i] << "\n";
+        }
+        std::cout << "1. Додати email\n"
+                  << "2. Видалити email\n"
+                  << "3. Замінити email\n"
+                  << "0. Назад\n"
+                  << ">>> ";
+        int opt;
+        if (!(std::cin >> opt)) {
+            std::cin.clear();
+            std::cin.ignore(10000, '\n');
+            continue;
+        }
+        std::cin.ignore();
+        if (opt == 0) break;
+        if (opt == 1) {
+            std::string e;
+            std::cout << "Введіть email: ";
+            std::getline(std::cin, e);
+            if (!e.empty()) {
+                record->getEmails().push_back(e);
+                std::cout << "Email додано.\n";
+            }
+        } else if (opt == 2) {
+            if (emails.empty()) {
+                std::cout << "Немає email для видалення.\n";
+                continue;
+            }
+            std::cout << "Введіть номер email для видалення: ";
+            int idx;
+            std::cin >> idx;
+            std::cin.ignore();
+            if (idx > 0 && idx <= emails.size()) {
+                record->getEmails().erase(record->getEmails().begin() + idx - 1);
+                std::cout << "Email видалено.\n";
+            } else {
+                std::cout << "Невірний індекс.\n";
+            }
+        } else if (opt == 3) {
+            if (emails.empty()) {
+                std::cout << "Немає email для заміни.\n";
+                continue;
+            }
+            std::cout << "Введіть номер email для заміни: ";
+            int idx;
+            std::cin >> idx;
+            std::cin.ignore();
+            if (idx > 0 && idx <= emails.size()) {
+                std::string e;
+                std::cout << "Введіть новий email: ";
+                std::getline(std::cin, e);
+                if (!e.empty()) {
+                    record->getEmails()[idx - 1] = e;
+                    std::cout << "Email змінено.\n";
+                }
+            } else {
+                std::cout << "Невірний індекс.\n";
+            }
+        } else {
+            std::cout << "Невірний вибір.\n";
+        }
+    }
+}
+
+void editPerson(Person* person, PhoneBook& book) {
+    while (true) {
+        std::cout << "Редагування людини:\n"
+                  << "1. Ім'я\n"
+                  << "2. Стать\n"
+                  << "3. Організація\n"
+                  << "4. Телефони\n"
+                  << "5. Email\n"
+                  << "0. Назад\n"
+                  << ">>> ";
+        int opt;
+        if (!(std::cin >> opt)) {
+            std::cin.clear();
+            std::cin.ignore(10000, '\n');
+            continue;
+        }
+        std::cin.ignore();
+        if (opt == 0) break;
+        if (opt == 1) {
+            std::string name;
+            std::cout << "Введіть нове ім'я: ";
+            std::getline(std::cin, name);
+            if (!name.empty()) {
+                person->setName(name);
+                std::cout << "Ім'я оновлено.\n";
+            }
+        } else if (opt == 2) {
+            std::string gender;
+            std::cout << "Введіть нову стать: ";
+            std::getline(std::cin, gender);
+            if (!gender.empty()) {
+                person->setGender(gender);
+                std::cout << "Стать оновлено.\n";
+            }
+        } else if (opt == 3) {
+            while (true) {
+                std::string orgName;
+                std::cout << "Введіть назву організації (пусто — видалити): ";
+                std::getline(std::cin, orgName);
+                if (orgName.empty()) {
+                    person->setOrganization(nullptr);
+                    std::cout << "Організацію видалено.\n";
+                    break;
+                }
+                if (auto* org = findOrganization(book, orgName)) {
+                    person->setOrganization(org);
+                    std::cout << "Організацію оновлено.\n";
+                    break;
+                }
+                std::cout << "Організація '" << orgName << "' не знайдена. Спробуйте ще раз.\n";
+            }
+        } else if (opt == 4) {
+            editPhones(person);
+        } else if (opt == 5) {
+            editEmails(person);
+        } else {
+            std::cout << "Невірний вибір.\n";
+        }
+    }
+}
+
+void editOrganization(Organization* org, PhoneBook& book) {
+    while (true) {
+        std::cout << "Редагування організації:\n"
+                  << "1. Назва\n"
+                  << "2. Діяльність\n"
+                  << "3. Керівник\n"
+                  << "4. Телефони\n"
+                  << "5. Email\n"
+                  << "0. Назад\n"
+                  << ">>> ";
+        int opt;
+        if (!(std::cin >> opt)) {
+            std::cin.clear();
+            std::cin.ignore(10000, '\n');
+            continue;
+        }
+        std::cin.ignore();
+        if (opt == 0) break;
+        if (opt == 1) {
+            std::string title;
+            std::cout << "Введіть нову назву: ";
+            std::getline(std::cin, title);
+            if (!title.empty()) {
+                org->setTitle(title);
+                std::cout << "Назву оновлено.\n";
+            }
+        } else if (opt == 2) {
+            std::string activity;
+            std::cout << "Введіть нову діяльність: ";
+            std::getline(std::cin, activity);
+            if (!activity.empty()) {
+                org->setActivity(activity);
+                std::cout << "Діяльність оновлено.\n";
+            }
+        } else if (opt == 3) {
+            while (true) {
+                std::string managerName;
+                std::cout << "Введіть ПІБ керівника (пусто — без керівника): ";
+                std::getline(std::cin, managerName);
+                if (managerName.empty()) {
+                    org->setManager(nullptr);
+                    std::cout << "Керівника видалено.\n";
+                    break;
+                }
+                if (auto* manager = findPerson(book, managerName)) {
+                    org->setManager(manager);
+                    manager->setOrganization(org);
+                    std::cout << "Керівника оновлено.\n";
+                    break;
+                }
+                std::cout << "Керівника '" << managerName << "' не знайдено. Спробуйте ще раз.\n";
+            }
+        } else if (opt == 4) {
+            editPhones(org);
+        } else if (opt == 5) {
+            editEmails(org);
+        } else {
+            std::cout << "Невірний вибір.\n";
+        }
+    }
+}
+
+void editRecord(PhoneBook& book) {
+    if (book.getRecords().empty()) {
+        std::cout << "Немає записів для редагування.\n";
+        return;
+    }
+
+    std::cout << "Оберіть номер запису для редагування (0 — скасувати): ";
+    int idx;
+    if (!(std::cin >> idx)) {
+        std::cin.clear();
+        std::cin.ignore(10000, '\n');
+        return;
+    }
+    std::cin.ignore();
+
+    if (idx == 0) {
+        std::cout << "Скасовано.\n";
+        return;
+    }
+    if (idx < 1 || idx > book.getRecords().size()) {
+        std::cout << "Невірний номер запису.\n";
+        return;
+    }
+
+    Record* record = book.getRecords()[idx - 1];
+    if (auto* person = dynamic_cast<Person*>(record)) {
+        editPerson(person, book);
+    } else if (auto* org = dynamic_cast<Organization*>(record)) {
+        editOrganization(org, book);
+    } 
 }
 
 int main(){
@@ -164,6 +511,7 @@ int main(){
                   << "2. Додати запис.\n"
                   << "3. Видалити запис. \n"
                   << "4. Пошук запису.\n"
+                  << "5. Редагувати запис.\n"
                   << "0. Вийти.\n"
                   << ">>> ";
 
@@ -347,6 +695,10 @@ int main(){
                     }
                     default: std::cout << "Невірний вибір.\n"; break;
                 }
+                break;
+            }
+            case 5: {
+                editRecord(book);
                 break;
             }
             case 0: {

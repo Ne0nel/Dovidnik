@@ -8,6 +8,8 @@ Person::Person(std::string name, std::string gender, Organization* org, std::vec
 std::string Person::getName() const             { return name; }
 Organization* Person::getOrganization() const   { return organization; }
 void Person::setOrganization(Organization* org) { organization = org; }
+void Person::setName(const std::string& newName) { name = newName; }
+void Person::setGender(const std::string& newGender) { gender = newGender; }
 
 void Person::print() const {
     std::cout << "ПІБ: " << name << "\n" 

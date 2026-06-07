@@ -39,6 +39,8 @@ class Record {
         virtual void print() const = 0;
 
         const std::vector<Phone>& getPhones() const { return phones; }
+        std::vector<Phone>& getPhones() { return phones; }
         const std::vector<std::string>& getEmails() const { return emails;}
+        std::vector<std::string>& getEmails() { return emails; }
 };
 
